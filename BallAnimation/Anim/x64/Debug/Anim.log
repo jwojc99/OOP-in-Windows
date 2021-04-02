@@ -1,0 +1,3 @@
+﻿  AnimView.cpp
+d:\s t u d i a\obiekt_sem_6\animacjaprojekt\anim\anim\animview.cpp(56): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+  Anim.vcxproj -> D:\S T U D I A\OBIEKT_SEM_6\AnimacjaProjekt\Anim\x64\Debug\Anim.exe
