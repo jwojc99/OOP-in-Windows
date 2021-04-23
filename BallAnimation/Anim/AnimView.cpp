@@ -1,11 +1,11 @@
 ﻿
-// AnimView.cpp: implementacja klasy CAnimView
+// AnimView.cpp: implementation of the CAnimView class
 //
 
 #include "pch.h"
 #include "framework.h"
-// Element SHARED_HANDLERS można zdefiniować w projekcie ATL z implementacją podglądu, miniaturze
-// procedury obsługi serializacji i filtrów wyszukiwania oraz umożliwia udostępnianie kodu dokumentu w tym projekcie.
+// SHARED_HANDLERS can be defined in an ATL project implementing preview, thumbnail
+// and search filter handlers and allows sharing of document code with that project.
 #ifndef SHARED_HANDLERS
 #include "Anim.h"
 #endif
@@ -17,12 +17,11 @@
 #define new DEBUG_NEW
 #endif
 
-//#define BALLSIZE 60
-#define BLUE RGB(0,0,255)
-#define MAX_BALL 10
-#define MIN_BALL 1
+#define MIN 1
+#define MAX 10
+#define COLOR RGB(rand()%255, rand()%255,rand()%255) //do constructora losowy kolor
 
-#define COLOR RGB(rand()%255, rand()%255,rand()%255)
+
 // CAnimView
 
 IMPLEMENT_DYNCREATE(CAnimView, CView)
@@ -39,21 +38,25 @@ BEGIN_MESSAGE_MAP(CAnimView, CView)
 	ON_WM_SIZE()
 END_MESSAGE_MAP()
 
+/////////////////////////////////////////
+// CALLBACK Timer procedure
+/////////////////////////////////////////
 void CALLBACK ZfxTimerProc(
-	HWND hWnd,
-	UINT nMsg,
-	UINT_PTR nIDEvent,
-	DWORD dwTime
+	HWND hWnd,			//handle of Cwnd that called SetTimer
+	UINT nMsg,			//WM_TIMER
+	UINT_PTR nIDEvent,	//timer identyfication
+	DWORD dwTime		//system time
 )
 {
 	::SendMessage(hWnd, WM_TIMER, 0, 0);
 }
+////////////////////////////////////////
 
-// Tworzenie/niszczenie obiektu CAnimView
 
+//  CAnimView construction/destruction
 CAnimView::CAnimView() noexcept
 {
-	srand(time(NULL));
+	//srand(time(NULL));
 	m_nBalls = 0;
 	m_bStart = FALSE;
 	m_pRect = new CRect(0, 0, 0, 0);
@@ -73,18 +76,23 @@ CAnimView::~CAnimView()
 
 BOOL CAnimView::PreCreateWindow(CREATESTRUCT& cs)
 {
+	// TODO: Modify the Window class or styles here by modifying
+	//  the CREATESTRUCT cs
 	return CView::PreCreateWindow(cs);
 }
 
+// CAnimView drawing
 void CAnimView::OnDraw(CDC* pDC)
 {
 	CAnimDoc* pDoc = GetDocument();
 	ASSERT_VALID(pDoc);
 	if (!pDoc)
 		return;
-	
-	CDC memDC;
-	BOOL b = memDC.CreateCompatibleDC(pDC);
+//	rysowanie po pamięciowym kontekście urządzenia, z którym będzie związana bitmapa,
+//	na której będziemy realizować operacje czyszczenia tła
+
+	CDC memDC;									//pamięciowy kontekst urządzenia
+	BOOL b = memDC.CreateCompatibleDC(pDC);		//kreowanie jako kompatybilny do rzeczywistego
 	ASSERT(b);
 
 	CBitmap bmp;
@@ -93,28 +101,34 @@ void CAnimView::OnDraw(CDC* pDC)
 	CBitmap* pOldBitmap = memDC.SelectObject(&bmp);
 	memDC.FillSolidRect(m_pRect, RGB(230, 230, 200));
 	
-	CPen* pOldPen = memDC.SelectObject(m_vBall[0]->GetPen());
-	CBrush* pOldBrush = memDC.SelectObject(m_vBall[0]->GetBrush());
+	//wybieramy  najpierw  do  kontekstu urządzenia  pióro  dla  kulki  a  potem  pędzel
 
-	for (int i = 0; i < m_nBalls; i++) {
+//----------------zmiana
+	CPen*    pOldPen = memDC.SelectObject(m_vBall[0]->GetPen());
+	CBrush*  pOldBrush = memDC.SelectObject(m_vBall[0]->GetBrush());
+
+//------------ zmiana ( memDC.Ellipse( m_pBall); )---------------
+	for (int i = 0; i < m_nBalls; i++) 
+	{
 		pOldPen = memDC.SelectObject(m_vBall[i]->GetPen());
 		pOldBrush = memDC.SelectObject(m_vBall[i]->GetBrush());
 		m_vBall[i]->PaintBall(&memDC);
 	}
-
-	memDC.SelectObject(pOldPen);
-	memDC.SelectObject(pOldBrush);
+//-----------------------
+	//memDC.SelectObject(pOldPen);
+	//memDC.SelectObject(pOldBrush);
 
 	b = pDC->BitBlt(0, 0, m_pRect->Width(), m_pRect->Height(), &memDC, 0, 0, SRCCOPY);
 	ASSERT(b);
 
+	//sprzątanie
 	memDC.SelectObject(pOldBitmap);
 	bmp.DeleteObject();
 	memDC.DeleteDC();
 }
 
 
-// Diagnostyka klasy CAnimView
+// CAnimView diagnostics
 
 #ifdef _DEBUG
 void CAnimView::AssertValid() const
@@ -127,7 +141,7 @@ void CAnimView::Dump(CDumpContext& dc) const
 	CView::Dump(dc);
 }
 
-CAnimDoc* CAnimView::GetDocument() const // wbudowana jest wersja bez debugowania
+CAnimDoc* CAnimView::GetDocument() const  // non-debug version is inline
 {
 	ASSERT(m_pDocument->IsKindOf(RUNTIME_CLASS(CAnimDoc)));
 	return (CAnimDoc*)m_pDocument;
@@ -135,10 +149,9 @@ CAnimDoc* CAnimView::GetDocument() const // wbudowana jest wersja bez debugowani
 #endif //_DEBUG
 
 
-// Procedury obsługi komunikatów CAnimView
-
 void CAnimView::OnStart()
 {
+
 	m_bStart = !m_bStart;
 	CMainFrame* pFrame = (CMainFrame*)GetParentFrame();
 	pFrame->ResetButton(m_bStart);
@@ -149,9 +162,12 @@ void CAnimView::OnInitialUpdate()
 {
 	CView::OnInitialUpdate();
 
-	m_nTimerId = SetTimer(WM_USER + 1, 20, ZfxTimerProc);
-}
+	//m_nTimerId = SetTimer(WM_USER + 1, 20, NULL);
 
+	m_nTimerId = SetTimer(WM_USER + 1, 20, ZfxTimerProc);
+	//WM_USER - ostatnia wartość użyta w zasobach
+	//20milisekund - interwał wysyłania komunikatu WM_TIMER
+}
 
 void CAnimView::OnDestroy()
 {
@@ -162,6 +178,7 @@ void CAnimView::OnDestroy()
 
 void CAnimView::OnTimer(UINT_PTR nIDEvent)
 {
+	//należy  uzależnić  wykonanie przesuwania piłki i odrysowania od prawdy tej składowe
 	if (m_bStart) 
 	{
 		for (int i = 0; i < m_nBalls; i++) {
@@ -173,7 +190,7 @@ void CAnimView::OnTimer(UINT_PTR nIDEvent)
 			m_vBall[i]->OffsetRect(m_vBall[i]->GetOffX(), m_vBall[i]->GetOffY());
 		}
 
-		Invalidate();
+		Invalidate(); //odrysowanie
 	}
 	CView::OnTimer(nIDEvent);
 }
@@ -181,12 +198,13 @@ void CAnimView::OnTimer(UINT_PTR nIDEvent)
 
 BOOL CAnimView::OnEraseBkgnd(CDC* pDC)
 {
-	return 1;
+	return 1;  //nie będzie czyszczenia tła okna widoku 
 }
 
 
 void CAnimView::OnPrepareDC(CDC* pDC, CPrintInfo* pInfo)
-{
+{	// odczytanie rozmiaru obszaru klienta (realizowane przed każdym odrysowaniem 
+	// więc zawsze będą aktualne rozmiary okna widoku) 
 	GetClientRect(m_pRect);
 	CView::OnPrepareDC(pDC, pInfo);
 }
@@ -194,28 +212,28 @@ void CAnimView::OnPrepareDC(CDC* pDC, CPrintInfo* pInfo)
 
 void CAnimView::OnPlus()
 {
-	if (m_nBalls >= 0 && m_nBalls < MAX_BALL) {
+	if (m_nBalls >= 0 && m_nBalls < MAX) {
 		int t_size = rand() % 100;
-		CBall* pBall = new CBall(10, 10, 30 + t_size, 30 + t_size, COLOR, rand() % 30, rand() % 30, NULL);
+		CBall* pBall = new CBall(20, 20, 40+t_size, 40+t_size , COLOR, rand() % 30, rand() % 30, NULL);
 		m_vBall.push_back(pBall);
 		m_nBalls+=1;
 		m_bPlus = TRUE;
 	}
-	else if (m_nBalls == MAX_BALL) {
+	else if (m_nBalls == MAX) {
 		m_bPlus = FALSE;
 	}
 	
-	if (m_nBalls > MIN_BALL) {
+	if (m_nBalls > MIN) {
 		m_bMinus = TRUE;
 	}
-	else if (m_nBalls == MIN_BALL) {
+	else if (m_nBalls == MIN) {
 		m_bMinus = FALSE;
 	}
 }
 
 void CAnimView::OnMinus()
 {
-	if (m_nBalls > MIN_BALL && m_nBalls <= MAX_BALL)
+	if (m_nBalls > MIN && m_nBalls <= MAX)
 	{
 		CBall* pBall = m_vBall.back();
 		delete pBall;
@@ -225,11 +243,11 @@ void CAnimView::OnMinus()
 		m_bMinus = TRUE;
 
 	}
-	else if (m_nBalls == MAX_BALL) {
+	else if (m_nBalls == MAX) {
 		m_bPlus = FALSE;
 
 	}
-	else if (m_nBalls == MIN_BALL) {
+	else if (m_nBalls == MIN) {
 		m_bMinus = FALSE;
 		m_bPlus = TRUE;
 	}
@@ -240,19 +258,22 @@ void CAnimView::OnUpdatePlus(CCmdUI *pCmdUI)
 	pCmdUI->Enable(m_bPlus);
 }
 
-
 void CAnimView::OnUpdateMinus(CCmdUI *pCmdUI)
 {
 	pCmdUI->Enable(m_bMinus);
 }
 
-
 void CAnimView::OnSize(UINT nType, int cx, int cy)
 {
-	for (int i = 0; i < m_nBalls; i++)
-	{
-		m_vBall[i]->SetBoundRect(m_pRect);
-		m_vBall[i]->OffsetRect(m_vBall[i]->GetOffX(), m_vBall[i]->GetOffY());
-	}
-	CView::OnSize(nType, cx, cy);
+	if (m_bStart) {
+
+		for (int i = 0; i < m_nBalls; i++)
+		{
+			m_vBall[i]->SetBoundRect(m_pRect);
+			m_vBall[i]->OffsetRect(m_vBall[i]->GetOffX(), m_vBall[i]->GetOffY());
+		}
+	}Invalidate();
+
+		CView::OnSize(nType, cx, cy);
+	
 }

@@ -1,48 +1,42 @@
 #include <afxwin.h>
 
+#define BLACK RGB(0,0,0)
+
 class CBall : public CRect
 {
 public:
-	CBall(int xLT, int yLT, int xRB, int yRB, COLORREF col, int x, int y,const CRect& rect);
-	CBall(const CRect& rect, COLORREF col, int offX, int offY, const  CRect& rect2);
-	CBall(CPoint point, CSize size, COLORREF col, int offX, int offY, const  CRect& rect);
-	~CBall();
-
-	inline COLORREF GetColor(COLORREF col);
-	//inline SetBallColor(COLORREF); // ustaw kolor (Delete() + Create()),  nie usuwaæ tu pamiêci,  ustaw rozmiar
-	inline void SetBallSize(const CRect& rect);     //ustaw rozmiar
-	void PaintBall(CDC* pDC);						//narysuj kulkê
-	void SetBall(const CRect& rect, COLORREF col, int nOffX, int nOffY);
-	void SetOffset(int nOffX, int nOffY);			//ustawia wektory ruchu
-	void SetBoundRect(const CRect& rect);			// ruch – obszar klienta, ustawia prostok¹t ograniczaj¹cy
-
 	
-	int GetOffX();
-	int GetOffY();
-	void SetPen(CPen* pPen);
-	void SetBrush(CBrush* pBrush);
+	CBall(int xLT = 0, int yLT = 0, int xRB = 0, int yRB = 0, COLORREF col = BLACK,int offX = 0,int offY = 0, const CRect* rect = nullptr);
+	CBall(const CRect& rect, COLORREF col = BLACK, int offX = 0, int offY = 0,	const  CRect* rect2 = nullptr);
+	CBall(CPoint point, CSize size, COLORREF col = BLACK, int offX = 0, int offY = 0, const  CRect* rect = nullptr);
+	~CBall(); 
 
+	inline void SetBallColor(COLORREF); // ustaw kolor 
+	inline void SetBallSize(const CRect& rect);  //ustaw rozmiar
+	void PaintBall(CDC* pDC);		//narysuj kulkÄ™
+	void SetBall(const CRect& rect, COLORREF col, int nOffX, int nOffY);
+	void SetOffset(int nOffX, int nOffY);	//ustawia wektory ruchu
+	void SetBoundRect(const CRect& rect);	// ruch â€“ obszar klienta, ustawia prostokÄ…t ograniczajÄ…cy
+
+	int GetOffX() const;
+	int GetOffY() const;
 	CPen* GetPen();
 	CBrush* GetBrush();
+
+private:
+
+	CPen* m_pBallPen;
+	CBrush* m_pBallBrush;
+	CRect* m_BoundRect = nullptr;
+	int m_nOffX;
+	int m_nOffY;
+
 private:
 	inline void CreateObjects(COLORREF col);	// kolor pedzla i piora ten sam
 												// CreatePen
 												// CreateSolidBrush
 
-	inline void DeleteObjects();				 // DeleteObject() dla piora i pêdzla
-	void InitObjects(COLORREF col);				 // przydziela pamiec i wykreowaæ
+	inline void DeleteObjects();				 // DeleteObject() dla piora i pÄ™dzla
+	void InitObjects(COLORREF col);				 // przydziela pamiec i wykreowaÄ‡
 	
-private:
-	CPen* m_pBallPen;
-	CBrush* m_pBallBrush;
-	int m_nOffX;
-	int m_nOffY;
-
-	CRect* m_BoundRect;
-
-	//Offsety ruchu
-		// wszystkie wsk lokowane w konstruktorze i maja wartoœci z parametrów, a w
-		//przypadku prostok¹ta ograniczaj¹cego gdy parametr konstr jest NULL to
-		//tworzymy prostok¹t o wspó³rzêdnych zerowych
-
 };

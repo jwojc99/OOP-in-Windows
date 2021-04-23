@@ -1,5 +1,5 @@
 ﻿
-// AnimView.h: interfejs klasy CAnimView
+// AnimView.h:  interface of the CAnimView class
 //
 
 #pragma once
@@ -9,11 +9,11 @@
 
 class CAnimView : public CView
 {
-protected: // utwórz tylko na podstawie serializacji
+protected: // create from serialization only
 	CAnimView() noexcept;
 	DECLARE_DYNCREATE(CAnimView)
 
-// Atrybuty
+// Attributes
 public:
 	CAnimDoc* GetDocument() const;
 private:
@@ -22,21 +22,23 @@ private:
 	CPen* m_pBallPen;
 	CBrush* m_pBallBrush;
 
+	//składowe  wektora  ruchu  kulki
 	int m_nBallOffX;
 	int m_nBallOffY;
 
 	BOOL m_bStart;
 
-// Operacje
+// Operations
 public:
 
-// Przesłania
+// Overrides
+
 public:
-	virtual void OnDraw(CDC* pDC);  // zastąpiony, aby narysować ten widok
+	virtual void OnDraw(CDC* pDC);  // overridden to draw this view
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 protected:
 
-// Implementacja
+// Implementation
 public:
 	virtual ~CAnimView();
 #ifdef _DEBUG
@@ -46,7 +48,7 @@ public:
 
 protected:
 
-// Wygenerowano funkcje mapy komunikatów
+// Generated message map functions
 protected:
 	DECLARE_MESSAGE_MAP()
 public:
@@ -75,7 +77,7 @@ private:
 	
 };
 
-#ifndef _DEBUG  // debuguj wersję w elemencie AnimView.cpp
+#ifndef _DEBUG  
 inline CAnimDoc* CAnimView::GetDocument() const
    { return reinterpret_cast<CAnimDoc*>(m_pDocument); }
 #endif
